@@ -1,7 +1,6 @@
-print("CORTANA LOADED")
-
-game.StarterGui:SetCore("SendNotification", {
-    Title = "Cortana",
-    Text = "Loader works",
-    Duration = 5
+-- Simple notification test
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "Cortana Loader",
+    Text = "Script is running!",
+    Duration = 5 -- seconds
 })
