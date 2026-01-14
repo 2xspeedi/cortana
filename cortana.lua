@@ -2,10 +2,8 @@
     Cortana Xeno-Style Bee Swarm Macro
     Full Progression Bot
     Xeno Executor Ready
-    Host as main.lua on GitHub
 --]]
 
--- SERVICES
 local plr = game:GetService("Players").LocalPlayer
 local ws = game:GetService("Workspace")
 local rs = game:GetService("ReplicatedStorage")
@@ -13,7 +11,6 @@ local ts = game:GetService("TweenService")
 local char = plr.Character or plr.CharacterAdded:Wait()
 local hrp = char:WaitForChild("HumanoidRootPart")
 
--- CONFIG
 local C = {
     AutoCollect = true,
     AutoQuest = true,
@@ -26,10 +23,8 @@ local C = {
     MoveTime = 0.25
 }
 
--- FUNCTION TABLE
 local F = {}
 
--- SMOOTH MOVE
 function F.Move(pos,t)
     t = t or C.MoveTime
     local tw = ts:Create(hrp,TweenInfo.new(t,Enum.EasingStyle.Linear),{CFrame=CFrame.new(pos)})
@@ -37,7 +32,6 @@ function F.Move(pos,t)
     tw.Completed:Wait()
 end
 
--- GET NEAREST FLOWER
 function F.GetFlower()
     local n,d = nil,math.huge
     for _,fName in ipairs(C.Fields) do
@@ -45,8 +39,10 @@ function F.GetFlower()
         if fld then
             for _,fl in ipairs(fld:GetChildren()) do
                 if fl:FindFirstChild("TouchInterest") then
-                    local dist = (fl.Position-hrp.Position).Magnitude
-                    if dist<d then n,d = fl,dist end
+                    local dist = (fl.Position - hrp.Position).Magnitude
+                    if dist < d then
+                        n,d = fl,dist
+                    end
                 end
             end
         end
@@ -54,57 +50,53 @@ function F.GetFlower()
     return n
 end
 
--- COLLECT POLLEN
 function F.Collect()
     if not C.AutoCollect then return end
-    local f = F.GetFlower()
-    if f then F.Move(f.Position+Vector3.new(0,3,0),0.2) end
+    local flower = F.GetFlower()
+    if flower then
+        F.Move(flower.Position + Vector3.new(0,3,0), 0.2)
+    end
 end
 
--- COMPLETE QUESTS
 function F.Quest()
     if not C.AutoQuest then return end
     local q = ws:FindFirstChild("QuestGiver")
     if q then
-        F.Move(q.Position+Vector3.new(0,3,0),0.4)
-        local r = rs:FindFirstChild("QuestRemote")
-        if r then r:FireServer("CompleteQuest") end
+        F.Move(q.Position + Vector3.new(0,3,0), 0.4)
+        local rem = rs:FindFirstChild("QuestRemote")
+        if rem then rem:FireServer("CompleteQuest") end
     end
 end
 
--- DEPOSIT HONEY
 function F.Deposit()
     if not C.AutoDeposit then return end
-    local h = ws:FindFirstChild("Hive")
-    if h then
-        F.Move(h.Position+Vector3.new(0,3,0),0.4)
-        local r = rs:FindFirstChild("DepositRemote")
-        if r then r:FireServer() end
+    local hive = ws:FindFirstChild("Hive")
+    if hive then
+        F.Move(hive.Position + Vector3.new(0,3,0), 0.4)
+        local rem = rs:FindFirstChild("DepositRemote")
+        if rem then rem:FireServer() end
     end
 end
 
--- USE BUFFS
 function F.Buff()
     if not C.AutoBuff then return end
     for _,b in ipairs(C.Buffs) do
-        local r = rs:FindFirstChild(b.."Remote")
-        if r then r:FireServer() end
+        local rem = rs:FindFirstChild(b.."Remote")
+        if rem then rem:FireServer() end
     end
 end
 
--- ATTACK ENEMIES
 function F.Enemy()
     if not C.AutoEnemy then return end
     for _,e in ipairs(ws:GetChildren()) do
         if e:IsA("Model") and table.find(C.Enemies,e.Name) then
-            F.Move(e.HumanoidRootPart.Position+Vector3.new(0,3,0),0.4)
-            local r = rs:FindFirstChild("AttackRemote")
-            if r then r:FireServer(e) end
+            F.Move(e.HumanoidRootPart.Position + Vector3.new(0,3,0), 0.4)
+            local rem = rs:FindFirstChild("AttackRemote")
+            if rem then rem:FireServer(e) end
         end
     end
 end
 
--- MAIN LOOP
 while task.wait(0.1) do
     F.Collect()
     F.Quest()
