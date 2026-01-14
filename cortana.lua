@@ -1,128 +1,80 @@
 --[[
-    Cortana Xeno-Style Bee Swarm Macro
-    Full Progression Bot
-    Xeno Executor Ready
+    Cortana Xeno-Style Functional Bee Swarm Macro
+    Movement-based, no restricted remote calls
 --]]
 
--- ERROR CATCHING & NOTIFICATION
 local ok, err = pcall(function()
-    -- Loaded Notification
-    game:GetService("StarterGui"):SetCore("SendNotification", {
+    local StarterGui = game:GetService("StarterGui")
+    StarterGui:SetCore("SendNotification", {
         Title = "Cortana",
         Text = "Macro Loaded Successfully!",
         Duration = 5
     })
 
-    -- SERVICES
-    local plr = game:GetService("Players").LocalPlayer
-    local ws = game:GetService("Workspace")
-    local rs = game:GetService("ReplicatedStorage")
-    local ts = game:GetService("TweenService")
+    local Players = game:GetService("Players")
+    local Workspace = game:GetService("Workspace")
+    local TweenService = game:GetService("TweenService")
+    local plr = Players.LocalPlayer
     local char = plr.Character or plr.CharacterAdded:Wait()
     local hrp = char:WaitForChild("HumanoidRootPart")
 
     -- CONFIG
     local C = {
-        AutoCollect = true,
-        AutoQuest = true,
-        AutoDeposit = true,
-        AutoBuff = true,
-        AutoEnemy = true,
         Fields = {"Clover Field","Blue Flower Field","Red Flower Field","White Flower Field"},
-        Buffs = {"Sugar","Clover","WindShoes"},
-        Enemies = {"Brown Bear","Queen Bee"},
+        QuestNPC = "QuestGiver",
+        Hive = "Hive",
         MoveTime = 0.25
     }
 
-    local F = {}
-
-    -- SMOOTH MOVE
-    function F.Move(pos,t)
-        t = t or C.MoveTime
-        local tw = ts:Create(hrp,TweenInfo.new(t,Enum.EasingStyle.Linear),{CFrame=CFrame.new(pos)})
+    -- MOVE FUNCTION
+    local function MoveTo(pos)
+        local tw = TweenService:Create(hrp, TweenInfo.new(C.MoveTime, Enum.EasingStyle.Linear), {CFrame = CFrame.new(pos)})
         tw:Play()
         tw.Completed:Wait()
     end
 
     -- GET NEAREST FLOWER
-    function F.GetFlower()
-        local n,d = nil,math.huge
-        for _,fName in ipairs(C.Fields) do
-            local fld = ws:FindFirstChild(fName)
-            if fld then
-                for _,fl in ipairs(fld:GetChildren()) do
+    local function GetNearestFlower()
+        local nearest, minDist = nil, math.huge
+        for _, fieldName in ipairs(C.Fields) do
+            local field = Workspace:FindFirstChild(fieldName)
+            if field then
+                for _, fl in ipairs(field:GetChildren()) do
                     if fl:FindFirstChild("TouchInterest") then
-                        local dist = (fl.Position-hrp.Position).Magnitude
-                        if dist<d then n,d = fl,dist end
+                        local dist = (fl.Position - hrp.Position).Magnitude
+                        if dist < minDist then
+                            nearest = fl
+                            minDist = dist
+                        end
                     end
                 end
             end
         end
-        return n
-    end
-
-    -- AUTO COLLECT POLLEN
-    function F.Collect()
-        if not C.AutoCollect then return end
-        local f = F.GetFlower()
-        if f then F.Move(f.Position+Vector3.new(0,3,0),0.2) end
-    end
-
-    -- AUTO COMPLETE QUESTS
-    function F.Quest()
-        if not C.AutoQuest then return end
-        local q = ws:FindFirstChild("QuestGiver")
-        if q then
-            F.Move(q.Position+Vector3.new(0,3,0),0.4)
-            local rem = rs:FindFirstChild("QuestRemote")
-            if rem then rem:FireServer("CompleteQuest") end
-        end
-    end
-
-    -- AUTO DEPOSIT HONEY
-    function F.Deposit()
-        if not C.AutoDeposit then return end
-        local h = ws:FindFirstChild("Hive")
-        if h then
-            F.Move(h.Position+Vector3.new(0,3,0),0.4)
-            local rem = rs:FindFirstChild("DepositRemote")
-            if rem then rem:FireServer() end
-        end
-    end
-
-    -- AUTO BUFFS
-    function F.Buff()
-        if not C.AutoBuff then return end
-        for _,b in ipairs(C.Buffs) do
-            local rem = rs:FindFirstChild(b.."Remote")
-            if rem then rem:FireServer() end
-        end
-    end
-
-    -- ATTACK ENEMIES
-    function F.Enemy()
-        if not C.AutoEnemy then return end
-        for _,e in ipairs(ws:GetChildren()) do
-            if e:IsA("Model") and table.find(C.Enemies,e.Name) then
-                F.Move(e.HumanoidRootPart.Position+Vector3.new(0,3,0),0.4)
-                local rem = rs:FindFirstChild("AttackRemote")
-                if rem then rem:FireServer(e) end
-            end
-        end
+        return nearest
     end
 
     -- MAIN LOOP
     while task.wait(0.1) do
-        F.Collect()
-        F.Quest()
-        F.Deposit()
-        F.Buff()
-        F.Enemy()
-    end
+        -- COLLECT FLOWERS
+        local flower = GetNearestFlower()
+        if flower then
+            MoveTo(flower.Position + Vector3.new(0,3,0))
+        end
 
+        -- GO TO QUEST NPC
+        local npc = Workspace:FindFirstChild(C.QuestNPC)
+        if npc then
+            MoveTo(npc.Position + Vector3.new(0,3,0))
+        end
+
+        -- GO TO HIVE TO DEPOSIT
+        local hive = Workspace:FindFirstChild(C.Hive)
+        if hive then
+            MoveTo(hive.Position + Vector3.new(0,3,0))
+        end
+    end
 end)
 
--- ERROR HANDLING
 if not ok then
     warn("CORTANA ERROR: "..tostring(err))
     game:GetService("StarterGui"):SetCore("SendNotification", {
