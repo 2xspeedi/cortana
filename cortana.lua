@@ -1,6 +1,6 @@
 --[[
-    Cortana Xeno-Style Functional Bee Swarm Macro
-    Movement-based, no restricted remote calls
+    Cortana Xeno-Style Bee Swarm Macro
+    Fully Functional with Tween Movement
 --]]
 
 local ok, err = pcall(function()
@@ -23,11 +23,11 @@ local ok, err = pcall(function()
         Fields = {"Clover Field","Blue Flower Field","Red Flower Field","White Flower Field"},
         QuestNPC = "QuestGiver",
         Hive = "Hive",
-        MoveTime = 0.25
+        MoveTime = 0.3
     }
 
-    -- MOVE FUNCTION
-    local function MoveTo(pos)
+    -- FUNCTION TO MOVE WITH TWEEN
+    local function TweenTo(pos)
         local tw = TweenService:Create(hrp, TweenInfo.new(C.MoveTime, Enum.EasingStyle.Linear), {CFrame = CFrame.new(pos)})
         tw:Play()
         tw.Completed:Wait()
@@ -58,19 +58,19 @@ local ok, err = pcall(function()
         -- COLLECT FLOWERS
         local flower = GetNearestFlower()
         if flower then
-            MoveTo(flower.Position + Vector3.new(0,3,0))
+            TweenTo(flower.Position + Vector3.new(0,3,0))
         end
 
         -- GO TO QUEST NPC
         local npc = Workspace:FindFirstChild(C.QuestNPC)
         if npc then
-            MoveTo(npc.Position + Vector3.new(0,3,0))
+            TweenTo(npc.Position + Vector3.new(0,3,0))
         end
 
         -- GO TO HIVE TO DEPOSIT
         local hive = Workspace:FindFirstChild(C.Hive)
         if hive then
-            MoveTo(hive.Position + Vector3.new(0,3,0))
+            TweenTo(hive.Position + Vector3.new(0,3,0))
         end
     end
 end)
